@@ -1,93 +1,101 @@
-# # # Auto-instalador InterligIA com Docker Swarm, Traefik e Portainer
+# Auto-Instalador Docker Swarm
 
-Este script automatiza a instalação e configuração de um ambiente Docker Swarm com Traefik como proxy reverso e Portainer para gerenciamento de contêineres.
+Este repositório contém um script de auto-instalação para configurar um ambiente Docker Swarm com Traefik e Portainer. O script automatiza o processo de instalação do Docker, inicialização do Swarm e implantação do Traefik como proxy reverso e do Portainer para gerenciamento de contêineres.
 
-## Requisitos
+## Características
 
-- Sistema operacional: Debian ou baseado em Debian (por exemplo, Ubuntu)
-- Privilégios de root ou acesso sudo
-- Conexão com a internet
+- Instalação automatizada do Docker e suas dependências
+- Inicialização do Docker Swarm
+- Implantação do Traefik v2.11.3 com HTTPS automático
+- Implantação do Portainer CE para fácil gerenciamento de contêineres
+- Prompt interativo para personalização
 
-## Componentes instalados
+## Pré-requisitos
 
-- Git
-- Docker Engine
-- Docker Swarm
-- Traefik v2.11.3
-- Portainer CE
+- Uma distribuição Linux baseada em Debian (ex: Debian, Ubuntu)
+- Acesso root ou sudo
+- Conectividade com a internet
 
-## Instruções de uso
+## Uso
 
-1. Instale o Git (se ainda não estiver instalado) e clone o repositório:
+1. Instale o Git (se ainda não estiver instalado):
    ```
-   sudo apt-get update && sudo apt-get install -y git && git clone https://github.com/InterligIA/auto_instalador_docker_swarm.git && cd auto_instalador_docker_swarm
+   sudo apt-get update
+   sudo apt-get install git -y
    ```
 
-2. Dê permissão de execução ao script:
+2. Clone o repositório:
+   ```
+   git clone https://github.com/InterligIA/auto_instalador_docker_swarm.git
+   ```
+
+3. Navegue até o diretório clonado:
+   ```
+   cd auto_instalador_docker_swarm
+   ```
+
+4. Torne o script executável:
    ```
    chmod +x auto_instalador_interligia.sh
    ```
 
-3. Execute o script como root ou com sudo:
+5. Execute o script:
    ```
    sudo ./auto_instalador_interligia.sh
    ```
 
-4. Siga as instruções na tela para fornecer as seguintes informações:
-   - IP do manager (endereço IP do nó manager do Swarm)
-   - Domínio do Portainer (domínio que será usado para acessar o Portainer)
-   - Email válido (para registro do Let's Encrypt)
+6. Siga os prompts interativos para fornecer:
+   - Seu endereço de e-mail (para certificados Let's Encrypt)
+   - O domínio para o Portainer (ex: portainer.seudominio.com)
+   - O endereço IP do nó gerenciador do Swarm
 
-5. Aguarde a conclusão da instalação.
+## O que o Script Faz
 
-## O que o script faz
+1. Instala o Docker e suas dependências
+2. Inicializa um Docker Swarm
+3. Cria uma rede overlay pública para serviços do Swarm
+4. Implanta o Traefik como proxy reverso com HTTPS automático
+5. Implanta o Portainer para gerenciamento de contêineres
 
-1. Coleta informações do usuário
-2. Instala o Docker Engine
-3. Inicializa o Docker Swarm
-4. Configura a rede overlay do Docker Swarm
-5. Cria e implanta o stack do Traefik
-6. Cria e implanta o stack do Portainer
+## Configuração
 
-## Pós-instalação
+O script criará dois arquivos de stack:
 
-Após a conclusão da instalação:
+- `traefik-stack.yml`: Contém a configuração do Traefik
+- `portainer-stack.yml`: Contém a configuração do Portainer
 
-1. Acesse o Portainer através do domínio fornecido durante a instalação (https://seu-dominio-portainer).
-2. Configure uma senha para o usuário admin do Portainer no primeiro acesso.
-3. Use o Portainer para gerenciar seus contêineres, imagens, redes e volumes Docker.
+Estes arquivos são criados no mesmo diretório do script e podem ser modificados para personalização adicional, se necessário.
 
-## Observações
+## Considerações de Segurança
 
-- Este script configura o Traefik para usar o Let's Encrypt para SSL/TLS automático.
-- Certifique-se de que o domínio fornecido para o Portainer esteja apontando para o IP do seu servidor antes de executar o script.
-- O script cria uma rede overlay chamada `rede_publica` que pode ser usada por outros serviços que você deseja expor através do Traefik.
+- O script irá expor as portas 80 e 443 no seu host. Certifique-se de que seu firewall esteja configurado adequadamente.
+- O Traefik está configurado para redirecionar automaticamente HTTP para HTTPS.
+- Certifique-se de manter seu sistema e a instalação do Docker atualizados.
 
-## Solução de problemas
+## Solução de Problemas
 
-Se encontrar problemas durante a instalação:
+Se você encontrar algum problema durante a instalação:
 
-1. Verifique se todos os requisitos foram atendidos.
-2. Certifique-se de que o servidor tem acesso à internet.
-3. Verifique se o domínio fornecido para o Portainer está corretamente configurado nos registros DNS.
-4. Revise os logs do Docker e do sistema para identificar possíveis erros.
-5. Se o problema persistir, abra uma issue no repositório GitHub do projeto: https://github.com/InterligIA/auto_instalador_docker_swarm/issues
-
-## Atualizações
-
-Para obter a versão mais recente do script:
-
-1. Navegue até o diretório do repositório clonado.
-2. Puxe as atualizações mais recentes:
+1. Verifique os logs do Traefik:
    ```
-   git pull origin main
+   docker service logs traefik_traefik
    ```
-3. Execute o script atualizado conforme as instruções acima.
 
-## Contribuição
+2. Verifique os logs do Portainer:
+   ```
+   docker service logs portainer_portainer
+   ```
 
-Sinta-se à vontade para contribuir com melhorias para este script através de pull requests no repositório GitHub: https://github.com/InterligIA/auto_instalador_docker_swarm
+3. Certifique-se de que seu domínio está corretamente apontado para o endereço IP do seu servidor.
+
+## Contribuindo
+
+Contribuições para melhorar o auto-instalador são bem-vindas. Sinta-se à vontade para enviar pull requests ou criar issues para bugs e solicitações de recursos.
 
 ## Licença
 
-Este script é fornecido "como está", sem garantias. Use por sua conta e risco.
+Este projeto é de código aberto e está disponível sob a [Licença MIT](LICENSE).
+
+## Aviso Legal
+
+Este script é fornecido como está, sem quaisquer garantias. Sempre revise os scripts antes de executá-los com privilégios elevados e certifique-se de entender as mudanças que eles farão em seu sistema.
