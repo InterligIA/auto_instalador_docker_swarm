@@ -1,0 +1,1 @@
+# auto_instalador_docker_swarm
