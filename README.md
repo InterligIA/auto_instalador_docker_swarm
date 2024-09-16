@@ -1,4 +1,4 @@
-# # Auto-instalador InterligIA com Docker Swarm, Traefik e Portainer
+# # # Auto-instalador InterligIA com Docker Swarm, Traefik e Portainer
 
 Este script automatiza a instalação e configuração de um ambiente Docker Swarm com Traefik como proxy reverso e Portainer para gerenciamento de contêineres.
 
@@ -7,10 +7,10 @@ Este script automatiza a instalação e configuração de um ambiente Docker Swa
 - Sistema operacional: Debian ou baseado em Debian (por exemplo, Ubuntu)
 - Privilégios de root ou acesso sudo
 - Conexão com a internet
-- Git instalado (para clonar o repositório)
 
 ## Componentes instalados
 
+- Git
 - Docker Engine
 - Docker Swarm
 - Traefik v2.11.3
@@ -18,32 +18,27 @@ Este script automatiza a instalação e configuração de um ambiente Docker Swa
 
 ## Instruções de uso
 
-1. Clone o repositório do GitHub:
+1. Instale o Git (se ainda não estiver instalado) e clone o repositório:
    ```
-   git clone https://github.com/InterligIA/auto_instalador_docker_swarm.git
-   ```
-
-2. Navegue até o diretório clonado:
-   ```
-   cd auto_instalador_docker_swarm
+   sudo apt-get update && sudo apt-get install -y git && git clone https://github.com/InterligIA/auto_instalador_docker_swarm.git && cd auto_instalador_docker_swarm
    ```
 
-3. Dê permissão de execução ao script:
+2. Dê permissão de execução ao script:
    ```
    chmod +x auto_instalador_interligia.sh
    ```
 
-4. Execute o script como root ou com sudo:
+3. Execute o script como root ou com sudo:
    ```
    sudo ./auto_instalador_interligia.sh
    ```
 
-5. Siga as instruções na tela para fornecer as seguintes informações:
+4. Siga as instruções na tela para fornecer as seguintes informações:
    - IP do manager (endereço IP do nó manager do Swarm)
    - Domínio do Portainer (domínio que será usado para acessar o Portainer)
    - Email válido (para registro do Let's Encrypt)
 
-6. Aguarde a conclusão da instalação.
+5. Aguarde a conclusão da instalação.
 
 ## O que o script faz
 
