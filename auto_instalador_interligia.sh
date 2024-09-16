@@ -1,42 +1,89 @@
 #!/bin/bash
+echo -e "\e[32m\e[0m"
+echo -e "\e[32m\e[0m"
+echo -e "\e[32m  _____ _   _ _______ ______ _____  _      _____ _____   _____          \e[0m"
+echo -e "\e[32m |_   _| \ | |__   __|  ____|  __ \| |    |_   _/ ____| |_   _|   /\    \e[0m"
+echo -e "\e[32m   | | |  \| |  | |  | |__  | |__) | |      | || |  __    | |    /  \   \e[0m"
+echo -e "\e[32m   | | |     |  | |  |  __| |  _  /| |      | || | |_ |   | |   / /\ \  \e[0m"
+echo -e "\e[32m  _| |_| |\  |  | |  | |____| | \ \| |____ _| || |__| |  _| |_ / ____ \ \e[0m"
+echo -e "\e[32m |_____|_| \_|  |_|  |______|_|  \_\______|_____\_____| |_____/_/    \_\ \e[0m"
+echo -e "\e[32m\e[0m"
+echo -e "\e[32m\e[0m"
 
-# Função para coletar informações do usuário
-get_user_input() {
-    read -p "Digite o IP do manager: " ip_manager
-    read -p "Digite o domínio do Portainer: " dominio_portainer
-    read -p "Digite um email válido: " email_valido
+# Função para mostrar um banner colorido
+function show_banner() {
+  echo -e "\e[32m==============================================================================\e[0m"
+  echo -e "\e[32m=                                                                            =\e[0m"
+  echo -e "\e[32m=                 \e[33mPreencha as informações solicitadas abaixo\e[32m                 =\e[0m"
+  echo -e "\e[32m=                                                                            =\e[0m"
+  echo -e "\e[32m==============================================================================\e[0m"
 }
 
-# Função para instalar o Docker e iniciar o Swarm
-install_docker_and_swarm() {
-    apt-get update
-    apt install -y sudo gnupg2 wget ca-certificates apt-transport-https curl gnupg nano htop
-    sudo install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    sudo chmod a+r /etc/apt/keyrings/docker.gpg
-
-    echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
-    sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-    
-    sudo apt-get update
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-    sudo systemctl enable docker.service
-    sudo systemctl enable containerd.service
-
-    docker swarm init --advertise-addr=$ip_manager
+# Função para mostrar uma mensagem de etapa
+function show_step() {
+  echo -e "\e[32mPasso \e[33m$1/3\e[0m"
 }
 
-# Função para configurar a rede do Docker Swarm
-configure_network() {
-    docker network create --driver=overlay rede_publica
-}
+# Mostrar banner inicial
+clear
+show_banner
+echo ""
 
-# Função para criar o stack do Traefik
-create_traefik_stack() {
-    cat << EOF > traefik-stack.yml
+# Solicitar informações do usuário
+show_step 1
+read -p "📧 Endereço de e-mail: " email
+echo ""
+show_step 2
+read -p "🌐 Dominio do Portainer (ex: portainer.seudominio.com): " portainer
+echo ""
+show_step 3
+read -p "🖥️ IP do Manager (ex: 192.168.0.100): " manager_ip
+echo ""
+
+# Verificação de dados
+clear
+echo ""
+echo "📧 Seu E-mail: $email"
+echo "🌐 Dominio do Portainer: $portainer"
+echo "🖥️ IP do Manager: $manager_ip"
+echo ""
+read -p "As informações estão certas? (y/n): " confirma1
+if [ "$confirma1" == "y" ]; then
+  clear
+  #########################################################
+  # INSTALANDO DEPENDENCIAS
+  #########################################################
+  sudo apt-get update
+  sudo apt install -y sudo gnupg2 wget ca-certificates apt-transport-https curl gnupg nano htop
+  sudo install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+  sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+  echo \
+    "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+    "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" |
+    sudo tee /etc/apt/sources.list.d/docker.list >/dev/null
+  sudo apt-get update
+
+  sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+  sudo systemctl enable docker.service
+  sudo systemctl enable containerd.service
+
+  sudo docker swarm init --advertise-addr=$manager_ip
+  mkdir -p ~/Portainer && cd ~/Portainer
+  echo -e "\e[32mAtualizado/Instalado com Sucesso\e[0m"
+  sleep 3
+
+  #########################################################
+  # CRIANDO REDE DOCKER SWARM
+  #########################################################
+  sudo docker network create --driver=overlay rede_publica
+
+  #########################################################
+  # CRIANDO STACK TRAEFIK
+  #########################################################
+  cat > traefik-stack.yml <<EOL
 version: "3.7"
 
 services:
@@ -56,7 +103,7 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.lets.acme.httpchallenge=true"
       - "--certificatesresolvers.lets.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.lets.acme.email=$email_valido"
+      - "--certificatesresolvers.lets.acme.email=$email"
       - "--certificatesresolvers.lets.acme.storage=/etc/traefik/letsencrypt/acme.json"
       - "--log.level=DEBUG"
       - "--log.format=common"
@@ -100,17 +147,16 @@ networks:
   rede_publica:
     external: true
     name: rede_publica
-EOF
+EOL
 
-    docker stack deploy -c traefik-stack.yml traefik
-}
-
-# Função para criar o stack do Portainer
-create_portainer_stack() {
-    cat << EOF > portainer-stack.yml
+  #########################################################
+  # CRIANDO STACK PORTAINER
+  #########################################################
+  cat > portainer-stack.yml <<EOL
 version: "3.7"
 
 services:
+
   agent:
     image: portainer/agent:sts
     volumes:
@@ -138,10 +184,10 @@ services:
       labels:
         - "traefik.enable=true"
         - "traefik.docker.network=rede_publica"
-        - "traefik.http.routers.portainer.rule=Host(\`$dominio_portainer\`)"
+        - "traefik.http.routers.portainer.rule=Host(\`$portainer\`)"
         - "traefik.http.routers.portainer.entrypoints=websecure"
         - "traefik.http.routers.portainer.priority=1"
-        - "traefik.http.routers.portainer.tls.certresolver=let"
+        - "traefik.http.routers.portainer.tls.certresolver=lets"
         - "traefik.http.routers.portainer.service=portainer"
         - "traefik.http.services.portainer.loadbalancer.server.port=9000"
 
@@ -155,20 +201,26 @@ volumes:
   portainer_data:
     external: true
     name: portainer_data
-EOF
+EOL
 
-    docker stack deploy -c portainer-stack.yml portainer
-}
-
-# Função principal
-main() {
-    get_user_input
-    install_docker_and_swarm
-    configure_network
-    create_traefik_stack
-    create_portainer_stack
-    echo "Instalação concluída!"
-}
-
-# Executar a função principal
-main
+  #########################################################
+  # INICIANDO STACKS
+  #########################################################
+  echo -e "\e[32mDeploying stacks...\e[0m"
+  sudo docker stack deploy -c traefik-stack.yml traefik
+  sudo docker stack deploy -c portainer-stack.yml portainer
+  
+echo -e "\e[32m\e[0m"
+echo -e "\e[32m\e[0m"
+echo -e "\e[32m  _____ _   _ _______ ______ _____  _      _____ _____   _____          \e[0m"
+echo -e "\e[32m |_   _| \ | |__   __|  ____|  __ \| |    |_   _/ ____| |_   _|   /\    \e[0m"
+echo -e "\e[32m   | | |  \| |  | |  | |__  | |__) | |      | || |  __    | |    /  \   \e[0m"
+echo -e "\e[32m   | | |     |  | |  |  __| |  _  /| |      | || | |_ |   | |   / /\ \  \e[0m"
+echo -e "\e[32m  _| |_| |\  |  | |  | |____| | \ \| |____ _| || |__| |  _| |_ / ____ \ \e[0m"
+echo -e "\e[32m |_____|_| \_|  |_|  |______|_|  \_\______|_____\_____| |_____/_/    \_\ \e[0m"
+echo -e "\e[32m\e[0m"
+echo -e "\e[32m\e[0m"
+else
+  echo "Encerrando a instalação, por favor, inicie a instalação novamente."
+  exit 0
+fi
